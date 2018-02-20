@@ -1,44 +1,11 @@
+import pickle
+
 loopGains = []
 loopPaths = []
 loopPathSets = []
 forwardPaths = []
 forwardPathSets = []
 forwardPathGains = []
-
-class Node:
-	def __init__(self, nextPoints = [], gains = []):
-		self.nextPoints = nextPoints
-		self.gains = gains
-	
-	def getGains(self):
-		return self.gains
-		
-	def getNextPoints(self):
-		return self.nextPoints
-		
-class Term:
-	def __init__(self, value="", leadingNegative=False):
-		self.value = value
-		#Negative term not in value, value is negative if leading negative is true.
-		if "-" not in value:
-			if not leadingNegative:
-				self.isNegative = False
-			else:
-				self.isNegative = True
-		#Negative term in value, value is negative if leading negative is false.
-		else:
-			if leadingNegative:
-				self.isNegative = False
-			else:
-				self.isNegative = True
-				
-	def isNegative(self):
-		return self.isNegative
-	
-	def getValue(self):
-		return self.value
-		
-		
 
 def getForwardPaths(traversal, currentPoint, endPoint, currentGain, currentPath):
 	if currentPoint == endPoint:
@@ -55,7 +22,7 @@ def getForwardPaths(traversal, currentPoint, endPoint, currentGain, currentPath)
 		#Explore all outwards paths from current point to find all potential paths.
 		for i_nextPoint in range(len(nextPoints[currentPoint])):
 			nextPoint = nextPoints[currentPoint][i_nextPoint]
-			getForwardPaths(traversalSlave, nextPoint, endPoint, currentGain + gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
+			getForwardPaths(traversalSlave, nextPoint, endPoint, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
 
 def forwardPathCreation(startPoint, endPoint):
 	#Create traversal boolean list that stores whether a node has been visited
@@ -97,7 +64,7 @@ def getLoops(traversal, currentPoint, loopEnd, currentGain, currentPath):
 			nextPoint = nextPoints[currentPoint][i_nextPoint]
 			traversalSlave = list(traversal)
 			traversalSlave[currentPoint] = True
-			getLoops(traversalSlave, nextPoint, loopEnd, currentGain + gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
+			getLoops(traversalSlave, nextPoint, loopEnd, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
 
 def loopCreation():
 	#Create traversal boolean list that stores whether a node has been visited
@@ -145,7 +112,7 @@ def getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, loopPath
 			if len(currentLoopPath.intersection(loopPathSet))==0:
 				#print("Here")
 				if currentDepth != neededLoopDepth:
-					getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPath, currentLoopPathIndex, currentGain + loopGains[currentLoopPathIndex], delta)
+					getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPath, currentLoopPathIndex, currentGain+loopGains[currentLoopPathIndex], delta)
 				else:
 					delta[neededLoopDepth-1].append(currentGain)	
 		else:
@@ -289,29 +256,22 @@ def getTerms(numerDenom):
 	
 	return terms
 	
-def standardForm(masonGainForm):
-	#Integer that represents the start of the denominator in the masonGainForm string.
-	denominatorStart = findDenominator(masonGainForm)
-	numerator = masonGainForm[:denominatorStart-1]
-	denominator = masonGainForm[denominatorStart:]
-	
-	numeratorTermList = getTerms(numerator)
-	denominatorTermList = getTerms(denominator)
-	
-	return denominatorTermList
-	
 if __name__ == '__main__':
 	#Length is equal to total nodes in graph.
 	#Graph indices in nextPoints are equal to their nodes.
 	#points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-	nextPoints = [[1],[2],[3],[1]]
-	gains = [['(1)'],['(1/R1)'],['(R2)'],['(-1)']]
-	forwardPathCreation(0, 3)
-	loopCreation()
-	delta_I = getDeltaI()
-	delta = getDelta()
-	masonGain = masonGainFormula(delta_I, delta)
-	standardForm = standardForm(masonGain)
+    nextPoints = [[1],[2],[3],[4],[1,5],[2]]
+    gains = [['(1)'],['(1/R1)'],['(1)'],['(1/sC1)'],['(-1)','(1/R2)'],['(-1)']]
+    forwardPathCreation(0, 4)
+    loopCreation()
+    delta_I = getDeltaI()
+    delta = getDelta()
+    masonGain = masonGainFormula(delta_I, delta)
+    
+    filename = "Test.pickle"
+    
+    with open(filename, 'wb') as f:
+        pickle.dump(masonGain, f)
 	
 	print("Forward Paths are " + str(forwardPaths))
 	print("Forward Path Gains are " + str(forwardPathGains))
@@ -320,4 +280,3 @@ if __name__ == '__main__':
 	print("Delta I, Independent Loop gains from forward path " + str(delta_I))
 	print("Delta " + str(delta))
 	print("Mason Gain Formula: " + str(masonGain))
-	print("Standard form of mason gain formula: " + str(standardForm))
