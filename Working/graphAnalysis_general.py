@@ -49,8 +49,9 @@ def getLoops(traversal, currentPoint, loopEnd, currentGain, currentPath):
 		temp = set(list(map(int, (currentPath + str(currentPoint)).split("+"))))
 		pathDiscovered = False
 		for i in range(len(loopPathSets)):
-			#Path is identical if intersection length is identical to loop length.
-			if len(temp.intersection(loopPathSets[i])) == len(temp):
+			#Path is identical if intersection length is identical to already discovered
+			#path length.
+			if len(temp.intersection(loopPathSets[i])) == len(loopPathSets[i]):
 				pathDiscovered = True
 		
 		if not pathDiscovered:
@@ -260,9 +261,9 @@ if __name__ == '__main__':
 	#Length is equal to total nodes in graph.
 	#Graph indices in nextPoints are equal to their nodes.
 	#points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[5,2],[3],[4],[1],[3]]
-    gains = [['(1)'],['(1/R1)','(1/R2)'],['(1)'],['(1/sC2)'],['(-1)'],['(1)']]
-    forwardPathCreation(0, 4)
+    nextPoints = [[1],[2],[3,4],[1],[1]]
+    gains = [['(1)'],['(1/R1)'],['(R2)','(R3)'],['(-1)'],['(-1)']]
+    forwardPathCreation(0, 1)
     loopCreation()
     delta_I = getDeltaI()
     delta = getDelta()
