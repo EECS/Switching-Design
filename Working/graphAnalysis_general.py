@@ -113,7 +113,7 @@ def getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, loopPath
 			if len(currentLoopPath.intersection(loopPathSet))==0:
 				#print("Here")
 				if currentDepth != neededLoopDepth:
-					getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPath, currentLoopPathIndex, currentGain+loopGains[currentLoopPathIndex], delta)
+					getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPath, currentLoopPathIndex, currentGain+"*"+loopGains[currentLoopPathIndex], delta)
 				else:
 					delta[neededLoopDepth-1].append(currentGain)	
 		else:
@@ -261,9 +261,9 @@ if __name__ == '__main__':
 	#Length is equal to total nodes in graph.
 	#Graph indices in nextPoints are equal to their nodes.
 	#points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[2],[3,4],[1],[1]]
-    gains = [['(1)'],['(1/R1)'],['(R2)','(R3)'],['(-1)'],['(-1)']]
-    forwardPathCreation(0, 1)
+    nextPoints = [[1],[2],[3,4],[1],[6],[4],[5,1]]
+    gains = [['(1)'],['(1/R1)'],['(R2)','(1)'],['(-1)'],['(R3)'],['(-1)'],['(1/R4)','(-1)']]
+    forwardPathCreation(0, 6)
     loopCreation()
     delta_I = getDeltaI()
     delta = getDelta()
