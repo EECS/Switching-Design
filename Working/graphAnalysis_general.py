@@ -91,20 +91,21 @@ def getDeltaI():
 	for currentForwardPath in forwardPathSets:
 		#Create empty list for current forward path to append if non-touching loops exist.
 		deltaI.append([])
-		independentLoopCount = 0
+		currentForwardPath_count = 0
 		currentLoop = 0
 		for loopPath in loopPathSets:
 			if len(currentForwardPath.intersection(loopPath)) == 0:
-				deltaI[independentLoopCount].append(loopGains[currentLoop])
-				independentLoopCount += 1
+				deltaI[currentForwardPath_count].append(loopGains[currentLoop])
 			
 			currentLoop += 1
 	
+		currentForwardPath_count += 1
+
 	return deltaI
 
-def getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, loopPathIndex, currentGain, delta):
+def getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, nextLoopPath_Index, currentGain, delta):
 	#Explore all subsequent loops in the list that are after the loop being currently explored.
-	for currentLoopPathIndex in range(loopPathIndex, len(loopPathSets)):
+	for currentLoopPathIndex in range(nextLoopPath_Index, len(loopPathSets)):
 		#Must review validity.
 		possibleDepth = len(loopPathSets) - currentLoopPathIndex + currentDepth
 		#print("Current loop path index " + str(currentLoopPathIndex))
@@ -130,10 +131,11 @@ def getDelta():
 		else:
 			delta.append([])
 	
+	#Represents the amount of loops 
 	currentLoopPair = 1
 	
 	#Continue searching for independent loop pairs if independent loop pairs at previous integer have been found
-	#and as long as the amount of independent loop pairs does not exceed the total number of loops.
+	#and as long as the currentLoopPair does not exceed the total number of loops in loopGains.
 	while currentLoopPair <= len(loopGains) and len(delta[currentLoopPair-1]) > 0:
 		currentDepth = 1
 		#Attempting to find independent loop pairs taken neededLoopDepth "at a time".
@@ -143,9 +145,9 @@ def getDelta():
 		for j in range(len(loopPathSets)):
 			currentLoopPath = loopPathSets[j]
 			#Compare the next set with the current set to determine independence.
-			loopPathIndex = j+1
+			nextLoopPath_Index = j+1
 			currentGain = loopGains[j]
-			getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, loopPathIndex, currentGain, delta)
+			getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, nextLoopPath_Index, currentGain, delta)
 			
 		currentLoopPair += 1
 	
@@ -261,9 +263,9 @@ if __name__ == '__main__':
 	#Length is equal to total nodes in graph.
 	#Graph indices in nextPoints are equal to their nodes.
 	#points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[2],[3,4],[1],[6],[4],[5,1]]
-    gains = [['(1)'],['(1/R1)'],['(R2)','(1)'],['(-1)'],['(R3)'],['(-1)'],['(1/R4)','(-1)']]
-    forwardPathCreation(0, 6)
+    nextPoints = [[1],[2],[3],[4],[1,5],[6],[7,8,3],[5],[5]]
+    gains = [['(1)'],['(1/R1)'],['(1)'],['(R2)'],['(-1)','(1)'],['(1/R3)'],['(R4)','(R5)','(-1)'],['(-1)'],['(-1)']]
+    forwardPathCreation(0, 1)
     loopCreation()
     delta_I = getDeltaI()
     delta = getDelta()
