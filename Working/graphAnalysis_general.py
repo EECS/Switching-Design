@@ -87,71 +87,90 @@ def loopCreation():
 			getLoops(traversalSlave, nextNode, i_loopStart, currentGain, str(currentPath)+ "+")
 					
 def getDeltaI():
-	deltaI = []
-	for currentForwardPath in forwardPathSets:
-		#Create empty list for current forward path to append if non-touching loops exist.
-		deltaI.append([])
-		currentForwardPath_count = 0
-		currentLoop = 0
-		for loopPath in loopPathSets:
-			if len(currentForwardPath.intersection(loopPath)) == 0:
-				deltaI[currentForwardPath_count].append(loopGains[currentLoop])
-			
-			currentLoop += 1
-	
-		currentForwardPath_count += 1
+    deltaI = []
+    for currentForwardPath in forwardPathSets:
+        #Create empty list for current forward path to append if non-touching loops exist.
+        deltaI.append([])
+        currentForwardPath_count = 0
+        currentLoop = 0
+        for loopPath in loopPathSets:
+            if len(currentForwardPath.intersection(loopPath)) == 0:
+                deltaI[currentForwardPath_count].append(loopGains[currentLoop])
 
-	return deltaI
+            currentLoop += 1
 
-def getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, nextLoopPath_Index, currentGain, delta):
-	#Explore all subsequent loops in the list that are after the loop being currently explored.
-	for currentLoopPathIndex in range(nextLoopPath_Index, len(loopPathSets)):
-		#Must review validity.
-		possibleDepth = len(loopPathSets) - currentLoopPathIndex + currentDepth
-		#print("Current loop path index " + str(currentLoopPathIndex))
-		if possibleDepth >= neededLoopDepth:
-			loopPathSet = loopPathSets[currentLoopPathIndex]
-			if len(currentLoopPath.intersection(loopPathSet))==0:
-				#print("Here")
-				if currentDepth != neededLoopDepth:
-					getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPath, currentLoopPathIndex, currentGain+"*"+loopGains[currentLoopPathIndex], delta)
-				else:
-					delta[neededLoopDepth-1].append(currentGain)	
-		else:
-			break
-	
+        currentForwardPath_count += 1
+
+    return deltaI
+
+def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, currentLoopPathSets, currentGain, delta):
+    #Explore all subsequent loops in the list that are after the loop being currently explored.
+    for currentLoopPathIndex in range(nextLoopPath_Index, len(loopPathSets)):
+        #Possible depth is equal to the total amount of loops minus the current loop being explored plus the current depth of the search
+        #E.g. [Loop A, Loop B, Loop C], exploring loop B with a starting loop of A, length is 3, currentLoopPathIndex is 1,
+        #current depth is 1 for a possible depth of 3, which is possible if A, B and C are independent.
+        possibleDepth = (len(loopPathSets)) - currentLoopPathIndex + currentDepth
+        #Only explore this path if the possible depth of the independent loops exceeds the needed loop depth for the delta equation.
+        #e.g. if the possible loop depth is 2 but the needed pairs of loops taken "at a time" is 3, the loop will not continue
+        #because the path cannot yield independent loop pairs of the correct number.
+        if possibleDepth >= neededLoopDepth:
+            loopPathSet = loopPathSets[currentLoopPathIndex]
+            addLoop = False
+            #Determine if loops are independent from one another. Must check that the loops are independent from all previously
+            #explored loops in order to be truly independent as a group. I.E., just because A is independent from B and A is
+            # independent from C, B is not necessarily independent from C.
+            for independentLoop_index in range(len(currentLoopPathSets)):
+                if len(currentLoopPathSets[independentLoop_index].intersection(loopPathSet))==0:
+                    #Only add the loop path to the set of independent loop paths if
+                    #loopPathSet is independent from all previous loop paths.
+                    if(independentLoop_index == len(currentLoopPathSets)-1):
+                        addLoop = True
+                else:
+                    break
+            
+            if addLoop:
+                if currentDepth != neededLoopDepth:
+                    #Loop 
+                    test = list(currentLoopPathSets.append(loopPathSet))
+                    getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPathIndex+1, test, currentGain+"*"+loopGains[currentLoopPathIndex], delta)
+                else:
+                    delta[neededLoopDepth-1].append(currentGain)
+        else:
+            break
+
 def getDelta():
-	delta = []
-	
-	#Create delta list where the ith entry is equal to the ith + 1 loop combinations.
-	#E.g. The index 1 entry in the list will hold the independent loop gains taken 2 at a time.
-	for i in range(len(loopPaths)):
-		if i == 0:
-			delta.append(loopGains)
-		else:
-			delta.append([])
-	
-	#Represents the amount of loops 
-	currentLoopPair = 1
-	
-	#Continue searching for independent loop pairs if independent loop pairs at previous integer have been found
-	#and as long as the currentLoopPair does not exceed the total number of loops in loopGains.
-	while currentLoopPair <= len(loopGains) and len(delta[currentLoopPair-1]) > 0:
-		currentDepth = 1
-		#Attempting to find independent loop pairs taken neededLoopDepth "at a time".
-		#E.g. if neededLoopDepth is 2, trying to find independent loop pairs taken 2 at a time.
-		neededLoopDepth = currentLoopPair + 1
-		#Update so that multiple sets aren't explored several times.
-		for j in range(len(loopPathSets)):
-			currentLoopPath = loopPathSets[j]
-			#Compare the next set with the current set to determine independence.
-			nextLoopPath_Index = j+1
-			currentGain = loopGains[j]
-			getIndependentLoops(currentDepth, neededLoopDepth, currentLoopPath, nextLoopPath_Index, currentGain, delta)
-			
-		currentLoopPair += 1
-	
-	return delta
+    delta = []
+
+    #Create delta list where the ith entry is equal to the ith + 1 loop combinations.
+    #E.g. The index 1 entry in the list will hold the independent loop gains taken 2 at a time.
+    for i in range(len(loopPaths)):
+        if i == 0:
+            delta.append(loopGains)
+        else:
+            delta.append([])
+
+    #Represents the amount of loops to be taken "at a time".
+    currentLoopPair = 1
+
+    #Continue searching for independent loop pairs if independent loop pairs at previous pair integer have been found
+    #and as long as the currentLoopPair does not exceed the total number of loops in loopGains.
+    while currentLoopPair <= len(loopGains) and len(delta[currentLoopPair-1]) > 0:
+        currentDepth = 1
+        #Attempting to find independent loop pairs taken neededLoopDepth "at a time".
+        #E.g. if neededLoopDepth is 2, trying to find independent loop pairs taken 2 at a time.
+        neededLoopDepth = currentLoopPair + 1
+        #Update so that multiple sets aren't explored several times.
+        for j in range(len(loopPathSets)):
+            currentLoopPath = loopPathSets[j]
+            #Compare the next set with the current set to determine independence.
+            nextLoopPath_Index = j+1
+            currentGain = loopGains[j]
+            test = list(currentLoopPath)
+            getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, test, currentGain, delta)
+
+        currentLoopPair += 1
+
+    return delta
 
 def masonGainFormula(delta_I, delta):
 	numerator = ''
@@ -214,55 +233,55 @@ def masonGainFormula(delta_I, delta):
 #################################################################################
 
 def findDenominator(masonGainForm):
-	parenStack = []
-	denomStart = 0
-	
-	#Loop through string to determine the start of the denominator.
-	for c in masonGainForm:
-		#Open parentheses indicates new term to be discovered.
-		if c == "(":
-			parenStack.append(c)
-		#Close parantheses indicates last term is now closed.
-		elif c == ")":
-			parenStack.pop()
-		elif c == "/":
-			#Denominator occurs when all parens are closed and a division character occurs.
-			if len(parenStack) == 0:
-				return denomStart + 1
-		
-		denomStart += 1
-	
-	return denomStart
-	
+    parenStack = []
+    denomStart = 0
+
+    #Loop through string to determine the start of the denominator.
+    for c in masonGainForm:
+        #Open parentheses indicates new term to be discovered.
+        if c == "(":
+            parenStack.append(c)
+        #Close parantheses indicates last term is now closed.
+        elif c == ")":
+            parenStack.pop()
+        elif c == "/":
+            #Denominator occurs when all parens are closed and a division character occurs.
+            if len(parenStack) == 0:
+                return denomStart + 1
+
+        denomStart += 1
+
+    return denomStart
+
 def getTerms(numerDenom):
-	parenStack = []
-	currentTerm = ""
-	#Track individual terms between curly braces e.g. ().
-	tempTerm = ""
-	#Term list where new entries indicate summation of terms.
-	terms = []
-	isNegative = False
-	
-	for c in numerDenom:
-		#Open parentheses indicates new term to be discovered.
-		if c == "(":
-			parenStack.append(c)
-		#Close parantheses indicates last term is now closed.
-		elif c == ")":
-			parenStack.pop()
-		else:
-			tempTerm += c
-	#Numerator or denominator does not contain any addition or subtraction operations,
-	#must add it to the term list after search is complete.
-	if len(currentTerm) != 0:
-		terms.append(currentTerm)
-	
-	return terms
-	
+    parenStack = []
+    currentTerm = ""
+    #Track individual terms between curly braces e.g. ().
+    tempTerm = ""
+    #Term list where new entries indicate summation of terms.
+    terms = []
+    isNegative = False
+
+    for c in numerDenom:
+        #Open parentheses indicates new term to be discovered.
+        if c == "(":
+            parenStack.append(c)
+        #Close parantheses indicates last term is now closed.
+        elif c == ")":
+            parenStack.pop()
+        else:
+            tempTerm += c
+    #Numerator or denominator does not contain any addition or subtraction operations,
+    #must add it to the term list after search is complete.
+    if len(currentTerm) != 0:
+        terms.append(currentTerm)
+
+    return terms
+
 if __name__ == '__main__':
-	#Length is equal to total nodes in graph.
-	#Graph indices in nextPoints are equal to their nodes.
-	#points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
+    #Length is equal to total nodes in graph.
+    #Graph indices in nextPoints are equal to their nodes.
+    #points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
     nextPoints = [[1],[2],[3],[4],[1,5],[6],[7,8,3],[5],[5]]
     gains = [['(1)'],['(1/R1)'],['(1)'],['(R2)'],['(-1)','(1)'],['(1/R3)'],['(R4)','(R5)','(-1)'],['(-1)'],['(-1)']]
     forwardPathCreation(0, 1)
@@ -275,11 +294,11 @@ if __name__ == '__main__':
     
     with open(filename, 'wb') as f:
         pickle.dump(masonGain, f)
-	
-	print("Forward Paths are " + str(forwardPaths))
-	print("Forward Path Gains are " + str(forwardPathGains))
-	print("Loop gains are " + str(loopGains))
-	print("Loop paths are " + str(loopPaths))
-	print("Delta I, Independent Loop gains from forward path " + str(delta_I))
-	print("Delta " + str(delta))
-	print("Mason Gain Formula: " + str(masonGain))
+
+    print("Forward Paths are " + str(forwardPaths))
+    print("Forward Path Gains are " + str(forwardPathGains))
+    print("Loop gains are " + str(loopGains))
+    print("Loop paths are " + str(loopPaths))
+    print("Delta I, Independent Loop gains from forward path " + str(delta_I))
+    print("Delta " + str(delta))
+    print("Mason Gain Formula: " + str(masonGain))
