@@ -105,8 +105,6 @@ def getDeltaI():
 
 def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, currentLoopPathSets, currentGain, delta):
     #Explore all subsequent loops in the list that are after the loop being currently explored.
-    print(currentLoopPathSets)
-    print(loopPathSets)
     for currentLoopPathIndex in range(nextLoopPath_Index, len(loopPathSets)):
         #Possible depth is equal to the total amount of loops minus the current loop being explored plus the current depth of the search
         #E.g. [Loop A, Loop B, Loop C], exploring loop B with a starting loop of A, length is 3, currentLoopPathIndex is 1,
@@ -117,16 +115,17 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
         #because the path cannot yield independent loop pairs of the correct number.
         if possibleDepth >= neededLoopDepth:
             loopPathSet = loopPathSets[currentLoopPathIndex]
-            print("Top Level Current Loop Path Set: "+str(loopPathSet))
+            #print("Current Tested Loop Path: "+str(loopPathSet))
             addLoop = False
             #Determine if loops are independent from one another. Must check that the loops are independent from all previously
             #explored loops in order to be truly independent as a group. I.E., just because A is independent from B and A is
             # independent from C, B is not necessarily independent from C.
             for independentLoop_index in range(len(currentLoopPathSets)):
                 currentPathTest = currentLoopPathSets[independentLoop_index]
-                print("Testing Loop Path Set: "+str(currentPathTest))
+                #print("Top Level Loop Path Set: "+str(currentPathTest))
                 if len(currentPathTest.intersection(loopPathSet)) == 0:
-                    print("Independence True")
+                    #print("Independence True")
+
                     #Only add the loop path to the set of independent loop paths if
                     #loopPathSet is independent from all previous loop paths.
                     if(independentLoop_index == len(currentLoopPathSets)-1):
@@ -135,12 +134,19 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
                     break
             
                 if addLoop:
+                    #print("Current Depth: "+str(currentDepth))
+                    #print("Needed depth: "+str(neededLoopDepth))
                     if currentDepth != neededLoopDepth:
                         currentLoopPathSetsCopy = list(currentLoopPathSets)
+                        #Append the current indepent loopPathSet to the list of independent sets in currentLoopPathSetsCopy.
                         currentLoopPathSetsCopy.append(loopPathSet)
+                        #Current depth is not equal to needLoopDepth, thus continue searching for the correct number of
+                        #indepedent loop pairs taken "at a time." Calling the function again increases the depth by 1,
+                        #as well as the index at which loops are being searched for. 
                         getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPathIndex+1,currentLoopPathSetsCopy,
                         currentGain+"*"+loopGains[currentLoopPathIndex], delta)
                     else:
+                        #print("Loop Added")
                         delta[neededLoopDepth-1].append(currentGain+"*"+loopGains[currentLoopPathIndex])
                         addLoop = False
                 else:
@@ -159,15 +165,13 @@ def getDelta():
 
     #Represents the amount of loops to be taken "at a time". Start at 2 "loops at a time", already gathered
     # the 1 "loop at a time" case with finding all loops in the graph.
-    currentLoopPair = 2
+    neededLoopDepth = 2
 
     #Continue searching for independent loop pairs if independent loop pairs at previous pair integer have been found
-    #and as long as the currentLoopPair does not exceed the total number of loops in loopGains.
-    while currentLoopPair <= len(loopGains) and len(delta[currentLoopPair-2]) > 0:
-        currentDepth = currentLoopPair
-        #Attempting to find independent loop pairs taken neededLoopDepth "at a time".
-        #E.g. if neededLoopDepth is 2, trying to find independent loop pairs taken 2 at a time.
-        neededLoopDepth = currentLoopPair
+    #and as long as the neededLoopDepth does not exceed the total number of loops in loopGains.
+    while neededLoopDepth <= len(loopGains) and len(delta[neededLoopDepth-2]) > 0:
+        #Current depth of loop pairs. At the top level, the first test is taken 2 "at a time."
+        currentDepth = 2
         #Update so that multiple sets aren't explored several times.
         for j in range(len(loopPathSets)):
             currentLoopPath = loopPathSets[j]
@@ -176,7 +180,7 @@ def getDelta():
             currentGain = loopGains[j]
             getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, [currentLoopPath], currentGain, delta)
 
-        currentLoopPair += 1
+        neededLoopDepth += 1
 
     return delta
 
