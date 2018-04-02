@@ -104,25 +104,9 @@ def getDeltaI():
     return deltaI
 
 def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, currentLoopPathSets, currentGain, delta):
-
-    addLoop = False
-    #Determine if loops are independent from one another. Must check that the loops are independent from all previously
-    #explored loops in order to be truly independent as a group. I.E., just because A is independent from B and A is
-    # independent from C, B is not necessarily independent from C.
-    for independentLoop_index in range(len(currentLoopPathSets)):
-        currentPathTest = currentLoopPathSets[independentLoop_index]
-        print("Testing Loop Path Set: "+str(currentPathTest))
-        if len(currentPathTest.intersection(loopPathSet)) == 0:
-            print("Independence True")
-            #Only add the loop path to the set of independent loop paths if
-            #loopPathSet is independent from all previous loop paths.
-            if(independentLoop_index == len(currentLoopPathSets)-1):
-                addLoop = True
-        else:
-            break
     #Explore all subsequent loops in the list that are after the loop being currently explored.
     print(currentLoopPathSets)
-    print(loopPathSets[nextLoopPath_Index:])
+    print(loopPathSets)
     for currentLoopPathIndex in range(nextLoopPath_Index, len(loopPathSets)):
         #Possible depth is equal to the total amount of loops minus the current loop being explored plus the current depth of the search
         #E.g. [Loop A, Loop B, Loop C], exploring loop B with a starting loop of A, length is 3, currentLoopPathIndex is 1,
@@ -134,7 +118,21 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
         if possibleDepth >= neededLoopDepth:
             loopPathSet = loopPathSets[currentLoopPathIndex]
             print("Top Level Current Loop Path Set: "+str(loopPathSet))
-            
+            addLoop = False
+            #Determine if loops are independent from one another. Must check that the loops are independent from all previously
+            #explored loops in order to be truly independent as a group. I.E., just because A is independent from B and A is
+            # independent from C, B is not necessarily independent from C.
+            for independentLoop_index in range(len(currentLoopPathSets)):
+                currentPathTest = currentLoopPathSets[independentLoop_index]
+                print("Testing Loop Path Set: "+str(currentPathTest))
+                if len(currentPathTest.intersection(loopPathSet)) == 0:
+                    print("Independence True")
+                    #Only add the loop path to the set of independent loop paths if
+                    #loopPathSet is independent from all previous loop paths.
+                    if(independentLoop_index == len(currentLoopPathSets)-1):
+                        addLoop = True
+                else:
+                    break
             
                 if addLoop:
                     if currentDepth != neededLoopDepth:
