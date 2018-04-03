@@ -141,7 +141,7 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
                         #Append the current indepent loopPathSet to the list of independent sets in currentLoopPathSetsCopy.
                         currentLoopPathSetsCopy.append(loopPathSet)
                         #Current depth is not equal to needLoopDepth, thus continue searching for the correct number of
-                        #indepedent loop pairs taken "at a time." Calling the function again increases the depth by 1,
+                        #independent loop pairs taken "at a time." Calling the function again increases the depth by 1,
                         #as well as the index at which loops are being searched for. 
                         getIndependentLoops(currentDepth+1, neededLoopDepth, currentLoopPathIndex+1,currentLoopPathSetsCopy,
                         currentGain+"*"+loopGains[currentLoopPathIndex], delta)
@@ -294,9 +294,9 @@ if __name__ == '__main__':
     #Length is equal to total nodes in graph.
     #Graph indices in nextPoints are equal to their nodes.
     #points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[2],[3],[4],[1,5],[6],[7,8,3],[5],[5]]
-    gains = [['(1)'],['(1/R1)'],['(1)'],['(R2)'],['(-1)','(1)'],['(1/R3)'],['(R4)','(R5)','(-1)'],['(-1)'],['(-1)']]
-    forwardPathCreation(0, 1)
+    nextPoints = [[1],[2],[3,6,9],[4],[5,1],[3],[1],[2],[1],[1]]
+    gains = [['(k)'],['(1/s*L)'],['(1)','((k*RQon))','(RL)'],['(RCout +(1/(s*Cout)))'],['(1/Rload)','(-1)'],['(-1)'],['(-1)'],['((1-k))'],['((1-k))'],['(-1)']]
+    forwardPathCreation(0, 4)
     loopCreation()
     delta_I = getDeltaI()
     delta = getDelta()
