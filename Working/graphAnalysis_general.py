@@ -86,18 +86,34 @@ def loopCreation():
             currentPath = i_loopStart
             getLoops(traversalSlave, nextNode, i_loopStart, currentGain, str(currentPath)+ "+")
 
-def getDeltaI():
+def getDeltaI(delta):
     deltaI = []
+    currentForwardPath_count = 0
+    dependentLoopGains = []
     for currentForwardPath in forwardPathSets:
-        #Create empty list for current forward path to append if non-touching loops exist.
+        #Create empty list for current forward path to append delta I to.
         deltaI.append([])
-        currentForwardPath_count = 0
+        #Create empty list for current forward path to append dependent loop gains on the forward path.
+        dependentLoopGains.append([])
         currentLoop = 0
+        #Find loop paths that are dependent on current forward path.
         for loopPath in loopPathSets:
-            if len(currentForwardPath.intersection(loopPath)) == 0:
-                deltaI[currentForwardPath_count].append(loopGains[currentLoop])
+            if len(currentForwardPath.intersection(loopPath)) != 0:
+                dependentLoopGains[currentForwardPath_count].append(loopGains[currentLoop])
 
             currentLoop += 1
+
+        sum = ''
+        #Sum together all loop gains that are dependent on the forward path.
+        for loopGain in dependentLoopGains[currentForwardPath_count]:
+            if sum =='':
+                sum += loopGain
+            else:
+                sum += "+"+loopGain
+        
+        #Append the sum of the loop gains that are dependent
+        if sum != '':
+            deltaI[currentForwardPath_count].append(sum)
 
         currentForwardPath_count += 1
 
@@ -217,7 +233,7 @@ def masonGainFormula(delta_I, delta):
         #Only add to denominator if loop pairs are populated.
         if len(loopPairs)>0:
             deltaTemp = ""
-            
+
             for loop in loopPairs:
                 if deltaTemp != '':
                     deltaTemp += "+"
@@ -249,8 +265,8 @@ if __name__ == '__main__':
     gains = [['(1)'],['(1/R1)'],['(R2)'],['(-1)','(1)'],['(1)','(-1)'],[]]
     forwardPathCreation(4, 5)
     loopCreation()
-    delta_I = getDeltaI()
     delta = getDelta()
+    delta_I = getDeltaI(delta)
 
     masonGain = masonGainFormula(delta_I, delta)
     
@@ -265,7 +281,7 @@ if __name__ == '__main__':
     print("Loop paths are " + str(loopPaths))
 
     for independentLoops_index in range(len(delta_I)):
-        print("Delta I, Independent Loop gains from forward path " + str(independentLoops_index+1) + ": " + str(delta_I[independentLoops_index]))
+        print("Delta I, Loops dependent upon Forward Path " + str(independentLoops_index+1) + ": " + str(delta_I[independentLoops_index]))
     
     print("Delta " + str(delta))
     print("Mason Gain Formula: " + str(masonGain))
