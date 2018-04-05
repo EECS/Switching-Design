@@ -8,64 +8,64 @@ forwardPathSets = []
 forwardPathGains = []
 
 def getForwardPaths(traversal, currentPoint, endPoint, currentGain, currentPath):
-	if currentPoint == endPoint:
-		#Add current path, current gain and current path set to appropriate lists
-		#for discovered forward path.
-		temp = set(list(map(int, (currentPath + str(currentPoint)).split("+"))))
-		forwardPaths.append(currentPath + str(currentPoint))
-		forwardPathGains.append(currentGain)
-		forwardPathSets.append(temp)
-	#Continue traversal only if node has not been visited.		
-	elif not traversal[currentPoint]:
-		traversalSlave = list(traversal)
-		traversalSlave[currentPoint] = True
-		#Explore all outwards paths from current point to find all potential paths.
-		for i_nextPoint in range(len(nextPoints[currentPoint])):
-			nextPoint = nextPoints[currentPoint][i_nextPoint]
-			getForwardPaths(traversalSlave, nextPoint, endPoint, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
+    if currentPoint == endPoint:
+        #Add current path, current gain and current path set to appropriate lists
+        #for discovered forward path.
+        temp = set(list(map(int, (currentPath + str(currentPoint)).split("+"))))
+        forwardPaths.append(currentPath + str(currentPoint))
+        forwardPathGains.append(currentGain)
+        forwardPathSets.append(temp)
+    #Continue traversal only if node has not been visited.		
+    elif not traversal[currentPoint]:
+        traversalSlave = list(traversal)
+        traversalSlave[currentPoint] = True
+        #Explore all outwards paths from current point to find all potential paths.
+        for i_nextPoint in range(len(nextPoints[currentPoint])):
+            nextPoint = nextPoints[currentPoint][i_nextPoint]
+            getForwardPaths(traversalSlave, nextPoint, endPoint, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
 
 def forwardPathCreation(startPoint, endPoint):
-	#Create traversal boolean list that stores whether a node has been visited
-	#to determine when searching is complete.
-	traversalMaster = []
-	for i in range(len(nextPoints)):
-		traversalMaster.append(False)
-	
-	#Create local copy of traversal list for recursive purposes.
-	traversalSlave = list(traversalMaster)
-	traversalSlave[startPoint] = True
-	#Explore all paths from starting point, to determine forward paths in graph.
-	for i_nextNode in range(len(nextPoints[startPoint])):
-		nextNode = nextPoints[startPoint][i_nextNode]
-		currentGain = gains[startPoint][i_nextNode]
-		getForwardPaths(traversalSlave, nextNode, endPoint, currentGain, str(startPoint)+ "+")
+    #Create traversal boolean list that stores whether a node has been visited
+    #to determine when searching is complete.
+    traversalMaster = []
+    for i in range(len(nextPoints)):
+        traversalMaster.append(False)
+
+    #Create local copy of traversal list for recursive purposes.
+    traversalSlave = list(traversalMaster)
+    traversalSlave[startPoint] = True
+    #Explore all paths from starting point, to determine forward paths in graph.
+    for i_nextNode in range(len(nextPoints[startPoint])):
+        nextNode = nextPoints[startPoint][i_nextNode]
+        currentGain = gains[startPoint][i_nextNode]
+        getForwardPaths(traversalSlave, nextNode, endPoint, currentGain, str(startPoint)+ "+")
 
 #Recursive function to create discover all loops in graph.
 def getLoops(traversal, currentPoint, loopEnd, currentGain, currentPath):
-	if currentPoint == loopEnd:
-		#Need to update short-circuit scheme.
-		#Convert current path to set and determine if the set (loop) has been discovered.
-		#Only add to loopPathSets if it has not been discovered.
-		temp = set(list(map(int, (currentPath + str(currentPoint)).split("+"))))
-		pathDiscovered = False
-		for i in range(len(loopPathSets)):
-			#Path is identical if intersection length is identical to already discovered
-			#path length.
-			if len(temp.intersection(loopPathSets[i])) == len(loopPathSets[i]):
-				pathDiscovered = True
-		
-		if not pathDiscovered:
-			loopGains.append(currentGain)
-			loopPaths.append(currentPath + str(currentPoint))
-			loopPathSets.append(temp)
-			
-	elif not traversal[currentPoint]:
-		#Begin traversal to loop end point from loop start point.
-		for i_nextPoint in range(len(nextPoints[currentPoint])):
-			nextPoint = nextPoints[currentPoint][i_nextPoint]
-			traversalSlave = list(traversal)
-			traversalSlave[currentPoint] = True
-			getLoops(traversalSlave, nextPoint, loopEnd, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
+    if currentPoint == loopEnd:
+        #Need to update short-circuit scheme.
+        #Convert current path to set and determine if the set (loop) has been discovered.
+        #Only add to loopPathSets if it has not been discovered.
+        temp = set(list(map(int, (currentPath + str(currentPoint)).split("+"))))
+        pathDiscovered = False
+        for i in range(len(loopPathSets)):
+            #Path is identical if intersection length is identical to already discovered
+            #path length.
+            if len(temp.intersection(loopPathSets[i])) == len(loopPathSets[i]):
+                pathDiscovered = True
+
+        if not pathDiscovered:
+            loopGains.append(currentGain)
+            loopPaths.append(currentPath + str(currentPoint))
+            loopPathSets.append(temp)
+
+    elif not traversal[currentPoint]:
+        #Begin traversal to loop end point from loop start point.
+        for i_nextPoint in range(len(nextPoints[currentPoint])):
+            nextPoint = nextPoints[currentPoint][i_nextPoint]
+            traversalSlave = list(traversal)
+            traversalSlave[currentPoint] = True
+            getLoops(traversalSlave, nextPoint, loopEnd, currentGain +"*"+ gains[currentPoint][i_nextPoint], currentPath + str(currentPoint)+"+")
 
 def loopCreation():
     #Create traversal boolean list that stores whether a node has been visited
@@ -154,7 +154,7 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
 
 def getDelta():
     delta = []
-
+    
     #Create delta list where the ith entry is equal to the ith + 1 loop combinations.
     #E.g. The index 1 entry in the list will hold the independent loop gains taken 2 at a time.
     for i in range(len(loopPaths)):
@@ -185,121 +185,73 @@ def getDelta():
     return delta
 
 def masonGainFormula(delta_I, delta):
-	numerator = ''
-	denominator = ''
-	
-	#Create numerator of mason gain formula.
-	gainPathCount = 0
-	for gain in forwardPathGains:
-		delta_I_temp = ''
-		for nontouchingLoop in delta_I[gainPathCount]:
-			#First non-touching loop is identified.
-			if delta_I_temp == '':
-				delta_I_temp += nontouchingLoop
-			else:
-				delta_I_temp += "+" + nontouchingLoop
-		
-		if numerator != '':
-				numerator += "+"
-		#No non-touching loops on forward path.
-		if delta_I_temp == '':
-			numerator += gain
-		#Non-touching loops on forward path exist
-		else:
-			numerator += gain + "*"+"(1-"+"("+delta_I_temp+")"+")"
-				
-		gainPathCount += 1
-	
-	numerator = "("+numerator+")"
-	#Create denominator of mason gain formula.
-	independentLoopPair = 1
-	for loopPairs in delta:
-		#Only add to denominator if loop pairs are populated.
-		if len(loopPairs)>0:
-			deltaTemp = ""
-			for loop in loopPairs:
-				if deltaTemp != '':
-					deltaTemp += "+"
-					
-				deltaTemp += loop
-			
-			deltaTemp = "(" + deltaTemp + ")"
-			
-			#Odd loop pairs are subtracted in the delta formula.
-			if independentLoopPair%2 != 0:
-				deltaTemp = "-" + deltaTemp
-			else:
-				deltaTemp = "+" + deltaTemp
-				
-			independentLoopPair += 1
-			
-			denominator = denominator + deltaTemp
-	
-	#Format denominator with leading 1.
-	denominator = "((1)" + denominator+")"
-	
-	return numerator+"/"+denominator
+    numerator = ''
+    denominator = ''
 
-#################################################################################
-#Standard Form portion of the program below, mason gain portion above.
-#################################################################################
+    #Create numerator of mason gain formula.
+    gainPathCount = 0
+    for gain in forwardPathGains:
+        delta_I_temp = ''
+        for nontouchingLoop in delta_I[gainPathCount]:
+            #First non-touching loop is identified.
+            if delta_I_temp == '':
+                delta_I_temp += nontouchingLoop
+            else:
+                delta_I_temp += "+" + nontouchingLoop
 
-def findDenominator(masonGainForm):
-    parenStack = []
-    denomStart = 0
-
-    #Loop through string to determine the start of the denominator.
-    for c in masonGainForm:
-        #Open parentheses indicates new term to be discovered.
-        if c == "(":
-            parenStack.append(c)
-        #Close parantheses indicates last term is now closed.
-        elif c == ")":
-            parenStack.pop()
-        elif c == "/":
-            #Denominator occurs when all parens are closed and a division character occurs.
-            if len(parenStack) == 0:
-                return denomStart + 1
-
-        denomStart += 1
-
-    return denomStart
-
-def getTerms(numerDenom):
-    parenStack = []
-    currentTerm = ""
-    #Track individual terms between curly braces e.g. ().
-    tempTerm = ""
-    #Term list where new entries indicate summation of terms.
-    terms = []
-    isNegative = False
-
-    for c in numerDenom:
-        #Open parentheses indicates new term to be discovered.
-        if c == "(":
-            parenStack.append(c)
-        #Close parantheses indicates last term is now closed.
-        elif c == ")":
-            parenStack.pop()
+        if numerator != '':
+            numerator += "+"
+        #No non-touching loops on forward path.
+        if delta_I_temp == '':
+            numerator += gain
+        #Non-touching loops on forward path exist
         else:
-            tempTerm += c
-    #Numerator or denominator does not contain any addition or subtraction operations,
-    #must add it to the term list after search is complete.
-    if len(currentTerm) != 0:
-        terms.append(currentTerm)
+            numerator += gain + "*"+"(1-"+"("+delta_I_temp+")"+")"
 
-    return terms
+        gainPathCount += 1
+
+    numerator = "("+numerator+")"
+    #Create denominator of mason gain formula.
+    independentLoopPair = 1
+    for loopPairs in delta:
+        #Only add to denominator if loop pairs are populated.
+        if len(loopPairs)>0:
+            deltaTemp = ""
+            
+            for loop in loopPairs:
+                if deltaTemp != '':
+                    deltaTemp += "+"
+
+                deltaTemp += loop
+
+            deltaTemp = "(" + deltaTemp + ")"
+
+            #Odd loop pairs are subtracted in the delta formula.
+            if independentLoopPair%2 != 0:
+                deltaTemp = "-" + deltaTemp
+            else:
+                deltaTemp = "+" + deltaTemp
+
+            independentLoopPair += 1
+
+            denominator = denominator + deltaTemp
+
+    #Format denominator with leading 1.
+    denominator = "((1)" + denominator+")"
+
+    return numerator+"/"+denominator
 
 if __name__ == '__main__':
     #Length is equal to total nodes in graph.
     #Graph indices in nextPoints are equal to their nodes.
     #points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[2],[3,6,9],[4],[5,1],[3],[1],[2],[1],[1]]
-    gains = [['(k)'],['(1/s*L)'],['(1)','((k*RQon))','(RL)'],['(RCout +(1/(s*Cout)))'],['(1/Rload)','(-1)'],['(-1)'],['(-1)'],['((1-k))'],['((1-k))'],['(-1)']]
-    forwardPathCreation(0, 4)
+    nextPoints = [[1],[2],[3],[1,5],[5,1],[]]
+    gains = [['(1)'],['(1/R1)'],['(R2)'],['(-1)','(1)'],['(1)','(-1)'],[]]
+    forwardPathCreation(4, 5)
     loopCreation()
     delta_I = getDeltaI()
     delta = getDelta()
+
     masonGain = masonGainFormula(delta_I, delta)
     
     filename = "Test.pickle"
@@ -311,6 +263,9 @@ if __name__ == '__main__':
     print("Forward Path Gains are " + str(forwardPathGains))
     print("Loop gains are " + str(loopGains))
     print("Loop paths are " + str(loopPaths))
-    print("Delta I, Independent Loop gains from forward path " + str(delta_I))
+
+    for independentLoops_index in range(len(delta_I)):
+        print("Delta I, Independent Loop gains from forward path " + str(independentLoops_index+1) + ": " + str(delta_I[independentLoops_index]))
+    
     print("Delta " + str(delta))
     print("Mason Gain Formula: " + str(masonGain))
