@@ -154,7 +154,7 @@ def getIndependentLoops(currentDepth, neededLoopDepth, nextLoopPath_Index, curre
                     #print("Needed depth: "+str(neededLoopDepth))
                     if currentDepth != neededLoopDepth:
                         currentLoopPathSetsCopy = list(currentLoopPathSets)
-                        #Append the current indepent loopPathSet to the list of independent sets in currentLoopPathSetsCopy.
+                        #Append the current independent loopPathSet to the list of independent sets in currentLoopPathSetsCopy.
                         currentLoopPathSetsCopy.append(loopPathSet)
                         #Current depth is not equal to needLoopDepth, thus continue searching for the correct number of
                         #independent loop pairs taken "at a time." Calling the function again increases the depth by 1,
@@ -204,29 +204,6 @@ def masonGainFormula(delta_I, delta):
     numerator = ''
     denominator = ''
 
-    #Create numerator of mason gain formula.
-    gainPathCount = 0
-    for gain in forwardPathGains:
-        delta_I_temp = ''
-        for nontouchingLoop in delta_I[gainPathCount]:
-            #First non-touching loop is identified.
-            if delta_I_temp == '':
-                delta_I_temp += nontouchingLoop
-            else:
-                delta_I_temp += "+" + nontouchingLoop
-
-        if numerator != '':
-            numerator += "+"
-        #No non-touching loops on forward path.
-        if delta_I_temp == '':
-            numerator += gain
-        #Non-touching loops on forward path exist
-        else:
-            numerator += gain + "*"+"(1-"+"("+delta_I_temp+")"+")"
-
-        gainPathCount += 1
-
-    numerator = "("+numerator+")"
     #Create denominator of mason gain formula.
     independentLoopPair = 1
     for loopPairs in delta:
@@ -255,15 +232,42 @@ def masonGainFormula(delta_I, delta):
     #Format denominator with leading 1.
     denominator = "((1)" + denominator+")"
 
+    #Create numerator of mason gain formula.
+    gainPathCount = 0
+    for gain in forwardPathGains:
+        delta_I_temp = ''
+        #Sum all loop gains that touch the current forward path.
+        for touchingLoops in delta_I[gainPathCount]:
+            #First touching loop is identified.
+            if delta_I_temp == '':
+                delta_I_temp += touchingLoops
+            else:
+                delta_I_temp += "+" + touchingLoops
+
+        #No loops touch the forward path, delta I takes the form of delta.
+        if delta_I_temp == '':
+            delta_I_temp = "("+forwardPathGains[gainPathCount]+"*"+denominator+")"
+        else:
+            delta_I_temp = "("+forwardPathGains[gainPathCount]+"*"+"("+denominator+"+"+"("+delta_I_temp+")"+")"+")"
+        
+        if numerator =='':
+            numerator += delta_I_temp
+        else:
+            numerator += "+"+delta_I_temp
+
+        gainPathCount += 1
+
+    numerator = "("+numerator+")"
+
     return numerator+"/"+denominator
 
 if __name__ == '__main__':
     #Length is equal to total nodes in graph.
     #Graph indices in nextPoints are equal to their nodes.
     #points = [Node([1], ["(1)"]), Node([2, 3], ["(1/R2)", "(1/R1)"]), Node([4], ["(1)"])]
-    nextPoints = [[1],[2],[3],[1,5],[5,1],[]]
-    gains = [['(1)'],['(1/R1)'],['(R2)'],['(-1)','(1)'],['(1)','(-1)'],[]]
-    forwardPathCreation(4, 5)
+    nextPoints = [[1],[3,2],[4],[4],[5],[1]]
+    gains = [['(1)'],['(1/R2)','(1/R1)'],['(1)'],['(1)'],['(R3)'],['(-1)']]
+    forwardPathCreation(0, 1)
     loopCreation()
     delta = getDelta()
     delta_I = getDeltaI(delta)
